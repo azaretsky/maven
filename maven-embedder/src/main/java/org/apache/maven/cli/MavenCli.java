@@ -449,7 +449,7 @@ public class MavenCli
         List<Option> setPropertyOptions = new ArrayList<>();
         for ( Option opt : mavenArgs.getOptions() )
         {
-            if ( String.valueOf( CLIManager.SET_SYSTEM_PROPERTY ).equals( opt.getOpt() ) )
+            if ( CLIManager.SET_SYSTEM_PROPERTY.equals( opt.getOpt() ) )
             {
                 setPropertyOptions.add( opt );
             }

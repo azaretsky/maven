@@ -35,43 +35,43 @@ import org.apache.commons.cli.ParseException;
  */
 public class CLIManager
 {
-    public static final char ALTERNATE_POM_FILE = 'f';
+    public static final String ALTERNATE_POM_FILE = "f";
 
-    public static final char BATCH_MODE = 'B';
+    public static final String BATCH_MODE = "B";
 
-    public static final char SET_SYSTEM_PROPERTY = 'D';
+    public static final String SET_SYSTEM_PROPERTY = "D";
 
-    public static final char OFFLINE = 'o';
+    public static final String OFFLINE = "o";
 
-    public static final char QUIET = 'q';
+    public static final String QUIET = "q";
 
-    public static final char DEBUG = 'X';
+    public static final String DEBUG = "X";
 
-    public static final char ERRORS = 'e';
+    public static final String ERRORS = "e";
 
-    public static final char HELP = 'h';
+    public static final String HELP = "h";
 
-    public static final char VERSION = 'v';
+    public static final String VERSION = "v";
 
-    public static final char SHOW_VERSION = 'V';
+    public static final String SHOW_VERSION = "V";
 
-    public static final char NON_RECURSIVE = 'N';
+    public static final String NON_RECURSIVE = "N";
 
-    public static final char UPDATE_SNAPSHOTS = 'U';
+    public static final String UPDATE_SNAPSHOTS = "U";
 
-    public static final char ACTIVATE_PROFILES = 'P';
+    public static final String ACTIVATE_PROFILES = "P";
 
     public static final String SUPRESS_SNAPSHOT_UPDATES = "nsu";
 
-    public static final char CHECKSUM_FAILURE_POLICY = 'C';
+    public static final String CHECKSUM_FAILURE_POLICY = "C";
 
-    public static final char CHECKSUM_WARNING_POLICY = 'c';
+    public static final String CHECKSUM_WARNING_POLICY = "c";
 
-    public static final char ALTERNATE_USER_SETTINGS = 's';
+    public static final String ALTERNATE_USER_SETTINGS = "s";
 
     public static final String ALTERNATE_GLOBAL_SETTINGS = "gs";
 
-    public static final char ALTERNATE_USER_TOOLCHAINS = 't';
+    public static final String ALTERNATE_USER_TOOLCHAINS = "t";
 
     public static final String ALTERNATE_GLOBAL_TOOLCHAINS = "gt";
 
@@ -109,24 +109,24 @@ public class CLIManager
     public CLIManager()
     {
         options = new Options();
-        options.addOption( Option.builder( Character.toString( HELP ) ).longOpt( "help" ).desc( "Display help information" ).build() );
-        options.addOption( Option.builder( Character.toString( ALTERNATE_POM_FILE ) ).longOpt( "file" ).hasArg().desc( "Force the use of an alternate POM file (or directory with pom.xml)" ).build() );
-        options.addOption( Option.builder( Character.toString( SET_SYSTEM_PROPERTY ) ).longOpt( "define" ).hasArg().desc( "Define a system property" ).build() );
-        options.addOption( Option.builder( Character.toString( OFFLINE ) ).longOpt( "offline" ).desc( "Work offline" ).build() );
-        options.addOption( Option.builder( Character.toString( VERSION ) ).longOpt( "version" ).desc( "Display version information" ).build() );
-        options.addOption( Option.builder( Character.toString( QUIET ) ).longOpt( "quiet" ).desc( "Quiet output - only show errors" ).build() );
-        options.addOption( Option.builder( Character.toString( DEBUG ) ).longOpt( "debug" ).desc( "Produce execution debug output" ).build() );
-        options.addOption( Option.builder( Character.toString( ERRORS ) ).longOpt( "errors" ).desc( "Produce execution error messages" ).build() );
-        options.addOption( Option.builder( Character.toString( NON_RECURSIVE ) ).longOpt( "non-recursive" ).desc( "Do not recurse into sub-projects" ).build() );
-        options.addOption( Option.builder( Character.toString( UPDATE_SNAPSHOTS ) ).longOpt( "update-snapshots" ).desc( "Forces a check for missing releases and updated snapshots on remote repositories" ).build() );
-        options.addOption( Option.builder( Character.toString( ACTIVATE_PROFILES ) ).longOpt( "activate-profiles" ).desc( "Comma-delimited list of profiles to activate" ).hasArg().build() );
-        options.addOption( Option.builder( Character.toString( BATCH_MODE ) ).longOpt( "batch-mode" ).desc( "Run in non-interactive (batch) mode (disables output color)" ).build() );
+        options.addOption( Option.builder( HELP ).longOpt( "help" ).desc( "Display help information" ).build() );
+        options.addOption( Option.builder( ALTERNATE_POM_FILE ).longOpt( "file" ).hasArg().desc( "Force the use of an alternate POM file (or directory with pom.xml)" ).build() );
+        options.addOption( Option.builder( SET_SYSTEM_PROPERTY ).longOpt( "define" ).hasArg().desc( "Define a system property" ).build() );
+        options.addOption( Option.builder( OFFLINE ).longOpt( "offline" ).desc( "Work offline" ).build() );
+        options.addOption( Option.builder( VERSION ).longOpt( "version" ).desc( "Display version information" ).build() );
+        options.addOption( Option.builder( QUIET ).longOpt( "quiet" ).desc( "Quiet output - only show errors" ).build() );
+        options.addOption( Option.builder( DEBUG ).longOpt( "debug" ).desc( "Produce execution debug output" ).build() );
+        options.addOption( Option.builder( ERRORS ).longOpt( "errors" ).desc( "Produce execution error messages" ).build() );
+        options.addOption( Option.builder( NON_RECURSIVE ).longOpt( "non-recursive" ).desc( "Do not recurse into sub-projects" ).build() );
+        options.addOption( Option.builder( UPDATE_SNAPSHOTS ).longOpt( "update-snapshots" ).desc( "Forces a check for missing releases and updated snapshots on remote repositories" ).build() );
+        options.addOption( Option.builder( ACTIVATE_PROFILES ).longOpt( "activate-profiles" ).desc( "Comma-delimited list of profiles to activate" ).hasArg().build() );
+        options.addOption( Option.builder( BATCH_MODE ).longOpt( "batch-mode" ).desc( "Run in non-interactive (batch) mode (disables output color)" ).build() );
         options.addOption( Option.builder( SUPRESS_SNAPSHOT_UPDATES ).longOpt( "no-snapshot-updates" ).desc( "Suppress SNAPSHOT updates" ).build() );
-        options.addOption( Option.builder( Character.toString( CHECKSUM_FAILURE_POLICY ) ).longOpt( "strict-checksums" ).desc( "Fail the build if checksums don't match" ).build() );
-        options.addOption( Option.builder( Character.toString( CHECKSUM_WARNING_POLICY ) ).longOpt( "lax-checksums" ).desc( "Warn if checksums don't match" ).build() );
-        options.addOption( Option.builder( Character.toString( ALTERNATE_USER_SETTINGS ) ).longOpt( "settings" ).desc( "Alternate path for the user settings file" ).hasArg().build() );
+        options.addOption( Option.builder( CHECKSUM_FAILURE_POLICY ).longOpt( "strict-checksums" ).desc( "Fail the build if checksums don't match" ).build() );
+        options.addOption( Option.builder( CHECKSUM_WARNING_POLICY ).longOpt( "lax-checksums" ).desc( "Warn if checksums don't match" ).build() );
+        options.addOption( Option.builder( ALTERNATE_USER_SETTINGS ).longOpt( "settings" ).desc( "Alternate path for the user settings file" ).hasArg().build() );
         options.addOption( Option.builder( ALTERNATE_GLOBAL_SETTINGS ).longOpt( "global-settings" ).desc( "Alternate path for the global settings file" ).hasArg().build() );
-        options.addOption( Option.builder( Character.toString( ALTERNATE_USER_TOOLCHAINS ) ).longOpt( "toolchains" ).desc( "Alternate path for the user toolchains file" ).hasArg().build() );
+        options.addOption( Option.builder( ALTERNATE_USER_TOOLCHAINS ).longOpt( "toolchains" ).desc( "Alternate path for the user toolchains file" ).hasArg().build() );
         options.addOption( Option.builder( ALTERNATE_GLOBAL_TOOLCHAINS ).longOpt( "global-toolchains" ).desc( "Alternate path for the global toolchains file" ).hasArg().build() );
         options.addOption( Option.builder( FAIL_FAST ).longOpt( "fail-fast" ).desc( "Stop at first failure in reactorized builds" ).build() );
         options.addOption( Option.builder( FAIL_AT_END ).longOpt( "fail-at-end" ).desc( "Only fail the build afterwards; allow all non-impacted builds to continue" ).build() );
@@ -136,7 +136,7 @@ public class CLIManager
         options.addOption( Option.builder( ALSO_MAKE ).longOpt( "also-make" ).desc( "If project list is specified, also build projects required by the list" ).build() );
         options.addOption( Option.builder( ALSO_MAKE_DEPENDENTS ).longOpt( "also-make-dependents" ).desc( "If project list is specified, also build projects that depend on projects on the list" ).build() );
         options.addOption( Option.builder( LOG_FILE ).longOpt( "log-file" ).hasArg().desc( "Log file where all build output will go (disables output color)" ).build() );
-        options.addOption( Option.builder( Character.toString( SHOW_VERSION ) ).longOpt( "show-version" ).desc( "Display version information WITHOUT stopping build" ).build() );
+        options.addOption( Option.builder( SHOW_VERSION ).longOpt( "show-version" ).desc( "Display version information WITHOUT stopping build" ).build() );
         options.addOption( Option.builder( ENCRYPT_MASTER_PASSWORD ).longOpt( "encrypt-master-password" ).hasArg().optionalArg( true ).desc( "Encrypt master security password" ).build() );
         options.addOption( Option.builder( ENCRYPT_PASSWORD ).longOpt( "encrypt-password" ).hasArg().optionalArg( true ).desc( "Encrypt server password" ).build() );
         options.addOption( Option.builder( THREADS ).longOpt( "threads" ).hasArg().desc( "Thread count, for instance 2.0C where C is core multiplied" ).build() );
