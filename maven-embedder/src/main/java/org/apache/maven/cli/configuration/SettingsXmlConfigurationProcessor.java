@@ -27,12 +27,12 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.commons.cli.CommandLine;
 import org.apache.maven.artifact.InvalidRepositoryException;
 import org.apache.maven.bridge.MavenRepositorySystem;
 import org.apache.maven.building.Source;
-import org.apache.maven.cli.CLIManager;
+import org.apache.maven.cli.CLIManager.FileOption;
 import org.apache.maven.cli.CliRequest;
+import org.apache.maven.cli.CommandLineWrapper;
 import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.execution.MavenExecutionRequestPopulationException;
 import org.apache.maven.settings.Mirror;
@@ -49,8 +49,6 @@ import org.apache.maven.settings.building.SettingsProblem;
 import org.apache.maven.settings.crypto.SettingsDecrypter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.apache.maven.cli.ResolveFile.resolveFile;
 
 /**
  * SettingsXmlConfigurationProcessor
@@ -83,17 +81,13 @@ public class SettingsXmlConfigurationProcessor
     public void process( CliRequest cliRequest )
         throws Exception
     {
-        CommandLine commandLine = cliRequest.getCommandLine();
-        String workingDirectory = cliRequest.getWorkingDirectory();
+        CommandLineWrapper commandLine = cliRequest.getCommandLine();
         MavenExecutionRequest request = cliRequest.getRequest();
 
-        File userSettingsFile;
+        File userSettingsFile = commandLine.getFile( FileOption.ALTERNATE_USER_SETTINGS );
 
-        if ( commandLine.hasOption( CLIManager.ALTERNATE_USER_SETTINGS ) )
+        if ( userSettingsFile != null )
         {
-            userSettingsFile = new File( commandLine.getOptionValue( CLIManager.ALTERNATE_USER_SETTINGS ) );
-            userSettingsFile = resolveFile( userSettingsFile, workingDirectory );
-
             if ( !userSettingsFile.isFile() )
             {
                 throw new FileNotFoundException( "The specified user settings file does not exist: "
@@ -105,13 +99,10 @@ public class SettingsXmlConfigurationProcessor
             userSettingsFile = DEFAULT_USER_SETTINGS_FILE;
         }
 
-        File globalSettingsFile;
+        File globalSettingsFile = commandLine.getFile( FileOption.ALTERNATE_GLOBAL_SETTINGS );
 
-        if ( commandLine.hasOption( CLIManager.ALTERNATE_GLOBAL_SETTINGS ) )
+        if ( globalSettingsFile != null )
         {
-            globalSettingsFile = new File( commandLine.getOptionValue( CLIManager.ALTERNATE_GLOBAL_SETTINGS ) );
-            globalSettingsFile = resolveFile( globalSettingsFile, workingDirectory );
-
             if ( !globalSettingsFile.isFile() )
             {
                 throw new FileNotFoundException( "The specified global settings file does not exist: "

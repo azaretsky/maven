@@ -20,8 +20,6 @@ package org.apache.maven.cli;
  */
 
 import com.google.inject.AbstractModule;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.UnrecognizedOptionException;
 import org.apache.maven.BuildAbort;
@@ -30,6 +28,7 @@ import org.apache.maven.Maven;
 import org.apache.maven.building.FileSource;
 import org.apache.maven.building.Problem;
 import org.apache.maven.building.Source;
+import org.apache.maven.cli.CLIManager.FileOption;
 import org.apache.maven.cli.configuration.ConfigurationProcessor;
 import org.apache.maven.cli.configuration.SettingsXmlConfigurationProcessor;
 import org.apache.maven.cli.event.DefaultEventSpyContext;
@@ -370,7 +369,7 @@ public class MavenCli
         CLIManager cliManager = new CLIManager();
 
         List<String> args = new ArrayList<>();
-        CommandLine mavenConfig = null;
+        CommandLineWrapper mavenConfig = null;
         try
         {
             File configFile = new File( cliRequest.multiModuleProjectDirectory, MVN_MAVEN_CONFIG );
@@ -385,7 +384,7 @@ public class MavenCli
                     }
                 }
 
-                mavenConfig = cliManager.parse( args.toArray( new String[0] ) );
+                mavenConfig = cliManager.parse( cliRequest.workingDirectory, args.toArray( new String[0] ) );
                 List<?> unrecongized = mavenConfig.getArgList();
                 if ( !unrecongized.isEmpty() )
                 {
@@ -404,11 +403,13 @@ public class MavenCli
         {
             if ( mavenConfig == null )
             {
-                cliRequest.commandLine = cliManager.parse( cliRequest.args );
+                cliRequest.commandLine = cliManager.parse( cliRequest.workingDirectory, cliRequest.args );
             }
             else
             {
-                cliRequest.commandLine = cliMerge( cliManager.parse( cliRequest.args ), mavenConfig );
+                cliRequest.commandLine = CommandLineWrapper.merge(
+                        cliManager.parse( cliRequest.workingDirectory, cliRequest.args ),
+                        mavenConfig );
             }
         }
         catch ( ParseException e )
@@ -429,45 +430,6 @@ public class MavenCli
             System.out.println( CLIReportingUtils.showVersion() );
             throw new ExitException( 0 );
         }
-    }
-
-    private CommandLine cliMerge( CommandLine mavenArgs, CommandLine mavenConfig )
-    {
-        CommandLine.Builder commandLineBuilder = new CommandLine.Builder();
-
-        // the args are easy, cli first then config file
-        for ( String arg : mavenArgs.getArgs() )
-        {
-            commandLineBuilder.addArg( arg );
-        }
-        for ( String arg : mavenConfig.getArgs() )
-        {
-            commandLineBuilder.addArg( arg );
-        }
-
-        // now add all options, except for -D with cli first then config file
-        List<Option> setPropertyOptions = new ArrayList<>();
-        for ( Option opt : mavenArgs.getOptions() )
-        {
-            if ( CLIManager.SET_SYSTEM_PROPERTY.equals( opt.getOpt() ) )
-            {
-                setPropertyOptions.add( opt );
-            }
-            else
-            {
-                commandLineBuilder.addOption( opt );
-            }
-        }
-        for ( Option opt : mavenConfig.getOptions() )
-        {
-            commandLineBuilder.addOption( opt );
-        }
-        // finally add the CLI system properties
-        for ( Option opt : setPropertyOptions )
-        {
-            commandLineBuilder.addOption( opt );
-        }
-        return commandLineBuilder.build();
     }
 
     /**
@@ -512,17 +474,16 @@ public class MavenCli
                 + "]. Supported values are (auto|always|never)." );
         }
         else if ( cliRequest.commandLine.hasOption( CLIManager.BATCH_MODE )
-            || cliRequest.commandLine.hasOption( CLIManager.LOG_FILE ) )
+            || cliRequest.commandLine.getFile( FileOption.LOG_FILE ) != null )
         {
             MessageUtils.setColorEnabled( false );
         }
 
         // LOG STREAMS
-        if ( cliRequest.commandLine.hasOption( CLIManager.LOG_FILE ) )
-        {
-            File logFile = new File( cliRequest.commandLine.getOptionValue( CLIManager.LOG_FILE ) );
-            logFile = resolveFile( logFile, cliRequest.workingDirectory );
+        File logFile = cliRequest.commandLine.getFile( FileOption.LOG_FILE );
 
+        if ( logFile != null )
+        {
             // redirect stdout and stderr to file
             try
             {
@@ -1205,14 +1166,10 @@ public class MavenCli
     void toolchains( CliRequest cliRequest )
         throws Exception
     {
-        File userToolchainsFile;
+        File userToolchainsFile = cliRequest.commandLine.getFile( FileOption.ALTERNATE_USER_TOOLCHAINS );
 
-        if ( cliRequest.commandLine.hasOption( CLIManager.ALTERNATE_USER_TOOLCHAINS ) )
+        if ( userToolchainsFile != null )
         {
-            userToolchainsFile =
-                new File( cliRequest.commandLine.getOptionValue( CLIManager.ALTERNATE_USER_TOOLCHAINS ) );
-            userToolchainsFile = resolveFile( userToolchainsFile, cliRequest.workingDirectory );
-
             if ( !userToolchainsFile.isFile() )
             {
                 throw new FileNotFoundException(
@@ -1224,14 +1181,10 @@ public class MavenCli
             userToolchainsFile = DEFAULT_USER_TOOLCHAINS_FILE;
         }
 
-        File globalToolchainsFile;
+        File globalToolchainsFile = cliRequest.commandLine.getFile( FileOption.ALTERNATE_GLOBAL_TOOLCHAINS );
 
-        if ( cliRequest.commandLine.hasOption( CLIManager.ALTERNATE_GLOBAL_TOOLCHAINS ) )
+        if ( globalToolchainsFile != null )
         {
-            globalToolchainsFile =
-                new File( cliRequest.commandLine.getOptionValue( CLIManager.ALTERNATE_GLOBAL_TOOLCHAINS ) );
-            globalToolchainsFile = resolveFile( globalToolchainsFile, cliRequest.workingDirectory );
-
             if ( !globalToolchainsFile.isFile() )
             {
                 throw new FileNotFoundException(
@@ -1301,7 +1254,7 @@ public class MavenCli
     @SuppressWarnings( "checkstyle:methodlength" )
     private MavenExecutionRequest populateRequest( CliRequest cliRequest, MavenExecutionRequest request )
     {
-        CommandLine commandLine = cliRequest.commandLine;
+        CommandLineWrapper commandLine = cliRequest.commandLine;
         String workingDirectory = cliRequest.workingDirectory;
         boolean quiet = cliRequest.quiet;
         boolean showErrors = cliRequest.showErrors;
@@ -1430,7 +1383,7 @@ public class MavenCli
         {
             transferListener = new QuietMavenTransferListener();
         }
-        else if ( request.isInteractiveMode() && !cliRequest.commandLine.hasOption( CLIManager.LOG_FILE ) )
+        else if ( request.isInteractiveMode() && cliRequest.commandLine.getFile( FileOption.LOG_FILE ) == null )
         {
             //
             // If we're logging to a file then we don't want the console transfer listener as it will spew
@@ -1449,12 +1402,6 @@ public class MavenCli
             executionListener = eventSpyDispatcher.chainListener( executionListener );
         }
 
-        String alternatePomFile = null;
-        if ( commandLine.hasOption( CLIManager.ALTERNATE_POM_FILE ) )
-        {
-            alternatePomFile = commandLine.getOptionValue( CLIManager.ALTERNATE_POM_FILE );
-        }
-
         request.setBaseDirectory( baseDirectory ).setGoals( goals ).setSystemProperties(
             cliRequest.systemProperties ).setUserProperties( cliRequest.userProperties ).setReactorFailureBehavior(
             reactorFailureBehaviour ) // default: fail fast
@@ -1469,15 +1416,15 @@ public class MavenCli
             .setGlobalChecksumPolicy( globalChecksumPolicy ) // default: warn
             .setMultiModuleProjectDirectory( cliRequest.multiModuleProjectDirectory );
 
+        File alternatePomFile = commandLine.getFile( FileOption.ALTERNATE_POM_FILE );
         if ( alternatePomFile != null )
         {
-            File pom = resolveFile( new File( alternatePomFile ), workingDirectory );
-            if ( pom.isDirectory() )
+            if ( alternatePomFile.isDirectory() )
             {
-                pom = new File( pom, "pom.xml" );
+                alternatePomFile = new File( alternatePomFile, "pom.xml" );
             }
 
-            request.setPom( pom );
+            request.setPom( alternatePomFile );
         }
         else if ( modelProcessor != null )
         {
@@ -1617,7 +1564,9 @@ public class MavenCli
     // System properties handling
     // ----------------------------------------------------------------------
 
-    static void populateProperties( CommandLine commandLine, Properties systemProperties, Properties userProperties )
+    static void populateProperties( CommandLineWrapper commandLine,
+                                    Properties systemProperties,
+                                    Properties userProperties )
     {
         EnvironmentUtils.addEnvVars( systemProperties );
 

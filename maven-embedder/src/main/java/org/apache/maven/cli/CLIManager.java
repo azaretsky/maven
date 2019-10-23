@@ -23,7 +23,6 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
@@ -35,8 +34,6 @@ import org.apache.commons.cli.ParseException;
  */
 public class CLIManager
 {
-    public static final String ALTERNATE_POM_FILE = "f";
-
     public static final String BATCH_MODE = "B";
 
     public static final String SET_SYSTEM_PROPERTY = "D";
@@ -67,14 +64,6 @@ public class CLIManager
 
     public static final String CHECKSUM_WARNING_POLICY = "c";
 
-    public static final String ALTERNATE_USER_SETTINGS = "s";
-
-    public static final String ALTERNATE_GLOBAL_SETTINGS = "gs";
-
-    public static final String ALTERNATE_USER_TOOLCHAINS = "t";
-
-    public static final String ALTERNATE_GLOBAL_TOOLCHAINS = "gt";
-
     public static final String FAIL_FAST = "ff";
 
     public static final String FAIL_AT_END = "fae";
@@ -89,8 +78,6 @@ public class CLIManager
 
     public static final String ALSO_MAKE_DEPENDENTS = "amd";
 
-    public static final String LOG_FILE = "l";
-
     public static final String ENCRYPT_MASTER_PASSWORD = "emp";
 
     public static final String ENCRYPT_PASSWORD = "ep";
@@ -103,6 +90,49 @@ public class CLIManager
 
     public static final String NO_TRANSFER_PROGRESS = "ntp";
 
+    /**
+     * All command-line options requiring a local file-system path as an argument
+     */
+    public enum FileOption
+    {
+        ALTERNATE_POM_FILE( "f", "file",
+                "Force the use of an alternate POM file (or directory with pom.xml)" ),
+
+        ALTERNATE_USER_SETTINGS( "s", "settings",
+                "Alternate path for the user settings file" ),
+
+        ALTERNATE_GLOBAL_SETTINGS( "gs", "global-settings",
+                "Alternate path for the global settings file" ),
+
+        ALTERNATE_USER_TOOLCHAINS( "t", "toolchains",
+                "Alternate path for the user toolchains file" ),
+
+        ALTERNATE_GLOBAL_TOOLCHAINS( "gt", "global-toolchains",
+                "Alternate path for the global toolchains file" ),
+
+        LOG_FILE( "l", "log-file",
+                "Log file where all build output will go (disables output color)" );
+
+        private final String opt, longOpt, desc;
+
+        FileOption( String opt, String longOpt, String desc )
+        {
+            this.opt = opt;
+            this.longOpt = longOpt;
+            this.desc = desc;
+        }
+
+        String getOpt()
+        {
+            return opt;
+        }
+
+        private Option buildOption()
+        {
+            return Option.builder( opt ).longOpt( longOpt ).hasArg().desc( desc ).build();
+        }
+    }
+
     protected Options options;
 
     @SuppressWarnings( { "static-access", "checkstyle:linelength" } )
@@ -110,7 +140,6 @@ public class CLIManager
     {
         options = new Options();
         options.addOption( Option.builder( HELP ).longOpt( "help" ).desc( "Display help information" ).build() );
-        options.addOption( Option.builder( ALTERNATE_POM_FILE ).longOpt( "file" ).hasArg().desc( "Force the use of an alternate POM file (or directory with pom.xml)" ).build() );
         options.addOption( Option.builder( SET_SYSTEM_PROPERTY ).longOpt( "define" ).hasArg().desc( "Define a system property" ).build() );
         options.addOption( Option.builder( OFFLINE ).longOpt( "offline" ).desc( "Work offline" ).build() );
         options.addOption( Option.builder( VERSION ).longOpt( "version" ).desc( "Display version information" ).build() );
@@ -124,10 +153,6 @@ public class CLIManager
         options.addOption( Option.builder( SUPRESS_SNAPSHOT_UPDATES ).longOpt( "no-snapshot-updates" ).desc( "Suppress SNAPSHOT updates" ).build() );
         options.addOption( Option.builder( CHECKSUM_FAILURE_POLICY ).longOpt( "strict-checksums" ).desc( "Fail the build if checksums don't match" ).build() );
         options.addOption( Option.builder( CHECKSUM_WARNING_POLICY ).longOpt( "lax-checksums" ).desc( "Warn if checksums don't match" ).build() );
-        options.addOption( Option.builder( ALTERNATE_USER_SETTINGS ).longOpt( "settings" ).desc( "Alternate path for the user settings file" ).hasArg().build() );
-        options.addOption( Option.builder( ALTERNATE_GLOBAL_SETTINGS ).longOpt( "global-settings" ).desc( "Alternate path for the global settings file" ).hasArg().build() );
-        options.addOption( Option.builder( ALTERNATE_USER_TOOLCHAINS ).longOpt( "toolchains" ).desc( "Alternate path for the user toolchains file" ).hasArg().build() );
-        options.addOption( Option.builder( ALTERNATE_GLOBAL_TOOLCHAINS ).longOpt( "global-toolchains" ).desc( "Alternate path for the global toolchains file" ).hasArg().build() );
         options.addOption( Option.builder( FAIL_FAST ).longOpt( "fail-fast" ).desc( "Stop at first failure in reactorized builds" ).build() );
         options.addOption( Option.builder( FAIL_AT_END ).longOpt( "fail-at-end" ).desc( "Only fail the build afterwards; allow all non-impacted builds to continue" ).build() );
         options.addOption( Option.builder( FAIL_NEVER ).longOpt( "fail-never" ).desc( "NEVER fail the build, regardless of project result" ).build() );
@@ -135,7 +160,6 @@ public class CLIManager
         options.addOption( Option.builder( PROJECT_LIST ).longOpt( "projects" ).desc( "Comma-delimited list of specified reactor projects to build instead of all projects. A project can be specified by [groupId]:artifactId or by its relative path" ).hasArg().build() );
         options.addOption( Option.builder( ALSO_MAKE ).longOpt( "also-make" ).desc( "If project list is specified, also build projects required by the list" ).build() );
         options.addOption( Option.builder( ALSO_MAKE_DEPENDENTS ).longOpt( "also-make-dependents" ).desc( "If project list is specified, also build projects that depend on projects on the list" ).build() );
-        options.addOption( Option.builder( LOG_FILE ).longOpt( "log-file" ).hasArg().desc( "Log file where all build output will go (disables output color)" ).build() );
         options.addOption( Option.builder( SHOW_VERSION ).longOpt( "show-version" ).desc( "Display version information WITHOUT stopping build" ).build() );
         options.addOption( Option.builder( ENCRYPT_MASTER_PASSWORD ).longOpt( "encrypt-master-password" ).hasArg().optionalArg( true ).desc( "Encrypt master security password" ).build() );
         options.addOption( Option.builder( ENCRYPT_PASSWORD ).longOpt( "encrypt-password" ).hasArg().optionalArg( true ).desc( "Encrypt server password" ).build() );
@@ -143,6 +167,10 @@ public class CLIManager
         options.addOption( Option.builder( LEGACY_LOCAL_REPOSITORY ).longOpt( "legacy-local-repository" ).desc( "Use Maven 2 Legacy Local Repository behaviour, ie no use of _remote.repositories. Can also be activated by using -Dmaven.legacyLocalRepo=true" ).build() );
         options.addOption( Option.builder( BUILDER ).longOpt( "builder" ).hasArg().desc( "The id of the build strategy to use" ).build() );
         options.addOption( Option.builder( NO_TRANSFER_PROGRESS ).longOpt( "no-transfer-progress" ).desc( "Do not display transfer progress when downloading or uploading" ).build() );
+        for ( FileOption fileOption : FileOption.values() )
+        {
+            options.addOption( fileOption.buildOption() );
+        }
 
         // Adding this back in for compatibility with the verifier that hard codes this option.
         options.addOption( Option.builder( "npr" ).longOpt( "no-plugin-registry" ).desc( "Ineffective, only kept for backward compatibility" ).build() );
@@ -151,15 +179,15 @@ public class CLIManager
         options.addOption( Option.builder( "npu" ).longOpt( "no-plugin-updates" ).desc( "Ineffective, only kept for backward compatibility" ).build() );
     }
 
-    public CommandLine parse( String[] args )
+    public CommandLineWrapper parse( String baseDirectory, String[] args )
         throws ParseException
     {
         // We need to eat any quotes surrounding arguments...
         String[] cleanArgs = CleanArgument.cleanArgs( args );
 
-        CommandLineParser parser = new GnuParser();
+        CommandLine commandLine = new GnuParser().parse( options, cleanArgs );
 
-        return parser.parse( options, cleanArgs );
+        return CommandLineWrapper.wrapCommandLine( baseDirectory, commandLine );
     }
 
     public void displayHelp( PrintStream stdout )
