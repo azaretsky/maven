@@ -384,7 +384,8 @@ public class MavenCli
                     }
                 }
 
-                mavenConfig = cliManager.parse( cliRequest.workingDirectory, args.toArray( new String[0] ) );
+                mavenConfig = cliManager.parse( cliRequest.multiModuleProjectDirectory.getPath(),
+                        args.toArray( new String[0] ) );
                 List<?> unrecongized = mavenConfig.getArgList();
                 if ( !unrecongized.isEmpty() )
                 {
